@@ -419,22 +419,30 @@ fn handleDestroy(listener: *wl.Listener(*wlr.Output), _: *wlr.Output) void {
 fn handleRequestState(listener: *wl.Listener(*wlr.Output.event.RequestState), event: *wlr.Output.event.RequestState) void {
     const output = @fieldParentPtr(Self, "request_state", listener);
 
-    // TODO double buffer output state changes for frame perfection and cleaner code.
-    // Schedule a frame and commit in the frame handler.
-    if (!output.wlr_output.commitState(event.state)) {
+    output.applyState(event.state) catch {
         log.err("failed to commit requested state", .{});
         return;
+    };
+
+    server.root.applyPending();
+}
+
+// TODO double buffer output state changes for frame perfection and cleaner code.
+// Schedule a frame and commit in the frame handler.
+// Get rid of this function.
+pub fn applyState(output: *Self, state: *wlr.Output.State) error{CommitFailed}!void {
+    if (!output.wlr_output.commitState(state)) {
+        return error.CommitFailed;
     }
 
-    if (event.state.committed.enabled) {
+    if (state.committed.enabled) {
         output.handleEnableDisable();
     }
 
-    if (event.state.committed.mode) {
+    if (state.committed.mode) {
         output.updateBackgroundRect();
         output.arrangeLayers();
         server.lock_manager.updateLockSurfaceSize(output);
-        server.root.applyPending();
     }
 }
 
