@@ -431,11 +431,17 @@ fn handleRequestState(listener: *wl.Listener(*wlr.Output.event.RequestState), ev
 // Schedule a frame and commit in the frame handler.
 // Get rid of this function.
 pub fn applyState(output: *Self, state: *wlr.Output.State) error{CommitFailed}!void {
+
+    // We need to be precise about this state change to make assertions
+    // in handleEnableDisable() possible.
+    const enable_state_change = state.committed.enabled and
+        (state.enabled != output.wlr_output.enabled);
+
     if (!output.wlr_output.commitState(state)) {
         return error.CommitFailed;
     }
 
-    if (state.committed.enabled) {
+    if (enable_state_change) {
         output.handleEnableDisable();
     }
 
