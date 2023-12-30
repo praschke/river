@@ -264,8 +264,8 @@ fn handleNewOutput(_: *wl.Listener(*wlr.Output), wlr_output: *wlr.Output) void {
     };
 }
 
-/// Remove the output from root.active_outputs and evacuate views if it is a
-/// member of the list.
+/// Remove the output from root.active_outputs and the output layout.
+/// Evacuate views if necessary.
 pub fn deactivateOutput(root: *Self, output: *Output) void {
     {
         // If the output has already been removed, do nothing
@@ -273,10 +273,13 @@ pub fn deactivateOutput(root: *Self, output: *Output) void {
         while (it.next()) |o| {
             if (o == output) break;
         } else return;
-
-        output.active_link.remove();
-        output.active_link.init();
     }
+
+    root.output_layout.remove(output.wlr_output);
+    output.tree.node.setEnabled(false);
+
+    output.active_link.remove();
+    output.active_link.init();
 
     {
         var it = output.inflight.focus_stack.iterator(.forward);

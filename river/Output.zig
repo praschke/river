@@ -476,6 +476,8 @@ fn handleEnableDisable(output: *Self) void {
         output.lock_render_state = .blanked;
         output.normal_content.node.setEnabled(false);
         output.locked_content.node.setEnabled(true);
+
+        server.root.deactivateOutput(output);
     }
 }
 
