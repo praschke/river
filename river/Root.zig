@@ -781,6 +781,13 @@ fn processOutputConfig(
                     });
                     success = false;
                 };
+                if (output.wlr_output.enabled) {
+                    // applyState() will always add the output to the layout on success, which means
+                    // that this function cannot fail as it does not need to allocate a new layout output.
+                    _ = self.output_layout.add(output.wlr_output, head.state.x, head.state.y) catch unreachable;
+                    output.tree.node.setPosition(head.state.x, head.state.y);
+                    output.scene_output.setPosition(head.state.x, head.state.y);
+                }
             },
         }
     }
